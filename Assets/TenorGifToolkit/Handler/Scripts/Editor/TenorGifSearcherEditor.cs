@@ -61,10 +61,17 @@ public class TenorGifSearcherEditor : Editor
             GUILayout.Label("You will need to get your own, by registering at the site listed below", EditorStyles.boldLabel);
             EditorGUILayout.Space();
         }
+#if UNITY_2019_2_OR_NEWER
         if (GUILayout.Button("https://tenor.com/developer/dashboard", EditorStyles.linkLabel))
         {
             Application.OpenURL("https://tenor.com/developer/dashboard");
         }
+#else
+        if (GUILayout.Button("https://tenor.com/developer/dashboard"))
+        {
+            Application.OpenURL("https://tenor.com/developer/dashboard");
+        }
+#endif
         if (GUILayout.Button("Test API Key"))
         {
             TenoreServiceAPI.TestApiKey(tenorApiKey.stringValue);
@@ -197,10 +204,17 @@ public class TenorGifSearcherEditor : Editor
         EditorGUILayout.EndVertical();
         GUI.backgroundColor = defaultBackgroundColour;
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+#if UNITY_2019_2_OR_NEWER
         if (GUILayout.Button("https://tenor.com/gifapi/documentation#attribution", EditorStyles.linkLabel))
         {
             Application.OpenURL("https://tenor.com/gifapi/documentation#attribution");
         }
+#else
+        if (GUILayout.Button("https://tenor.com/gifapi/documentation#attribution"))
+        {
+            Application.OpenURL("https://tenor.com/gifapi/documentation#attribution");
+        }
+#endif
         EditorGUILayout.EndVertical();
 
         serializedObject.ApplyModifiedProperties();
