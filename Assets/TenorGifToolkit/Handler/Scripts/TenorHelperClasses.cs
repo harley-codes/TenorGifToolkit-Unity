@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Video;
 using System.ComponentModel;
 
-namespace TenorGifToolkit.Helpers
+namespace TenorGifToolkit.Handler
 {
     /* Just some cool stuff to help out, and reduce your code :)
      * 
@@ -15,6 +15,7 @@ namespace TenorGifToolkit.Helpers
      * 
      * TenorFormattedResults
      * Just a much more please adaptation of the Core API search results.
+     * Has function AddPages(), useful if you want to hold a reference of old/new after getting new search results.
      * 
      * PrepareGifPlayer
      * Configures the video player for you and spits out a Render Texture that can be applied to a UI image.
@@ -78,7 +79,7 @@ namespace TenorGifToolkit.Helpers
 
         public class Media
         {
-            public Media(TenorAPI.SearchResults.Result result)
+            public Media(SearchResults.Result result)
             {
                 ApiID = result.id;
                 Title = result.title;
@@ -102,7 +103,7 @@ namespace TenorGifToolkit.Helpers
 
         public class Gif
         {
-            public Gif(TenorAPI.SearchResults.MediaItem item, int iD, string title, bool hasAudio)
+            public Gif(SearchResults.MediaItem item, int iD, string title, bool hasAudio)
             {
                 VideoURL = item.url;
                 ThumnailURL = item.preview;
@@ -121,13 +122,13 @@ namespace TenorGifToolkit.Helpers
             public bool HasAudio { get; set; }
         }
 
-        public TenorFormattedResults(TenorAPI.SearchResults.Result result)
+        public TenorFormattedResults(SearchResults.Result result)
         {
             GifResults = new Dictionary<int, Media>();
             GifResults.Add(result.id, new Media(result));
         }
 
-        public TenorFormattedResults(TenorAPI.SearchResults.Result[] results)
+        public TenorFormattedResults(SearchResults.Result[] results)
         {
             GifResults = results.ToDictionary(
                 key => key.id,
@@ -135,7 +136,7 @@ namespace TenorGifToolkit.Helpers
             );
         }
 
-        public void AddPages(TenorAPI.SearchResults.Result[] results)
+        public void AddPages(SearchResults.Result[] results)
         {
             results.ToList().ForEach(result => {
                 if (!GifResults.ContainsKey(result.id))
@@ -161,21 +162,37 @@ namespace TenorGifToolkit.Helpers
 
     public static class HelperFunctions
     {
-        public static void PrepareGifPlayer_NewRender(ref VideoPlayer videoPlayer, out RenderTexture renderTexture, TenorFormattedResults.Gif gif, bool loopGif = true)
+        public static void PrepareGifPlayer_NewRender(ref VideoPlayer videoPlayer, out RenderTexture renderTexture, TenorFormattedResults.Gif gif, bool loopGif = true, bool disableAudio = true)
         {
             renderTexture = new RenderTexture(gif.PixelSize.x, gif.PixelSize.y, 0);
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = gif.VideoURL;
             videoPlayer.isLooping = loopGif;
             videoPlayer.targetTexture = renderTexture;
+            if (disableAudio)
+            {
+                for (ushort i = 0; i < videoPlayer.controlledAudioTrackCount; i++)
+                {
+                    videoPlayer.SetDirectAudioMute(i, true);
+                    videoPlayer.EnableAudioTrack(i, false);
+                }
+            }
         }
 
-        public static void PrepareGifPlayer_ExisitngRender(ref VideoPlayer videoPlayer, ref RenderTexture renderTexture, TenorFormattedResults.Gif gif, bool loopGif = true)
+        public static void PrepareGifPlayer_ExisitngRender(ref VideoPlayer videoPlayer, ref RenderTexture renderTexture, TenorFormattedResults.Gif gif, bool loopGif = true, bool disableAudio = true)
         {
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = gif.VideoURL;
             videoPlayer.isLooping = loopGif;
             videoPlayer.targetTexture = renderTexture;
+            if (disableAudio)
+            {
+                for (ushort i = 0; i < videoPlayer.controlledAudioTrackCount; i++)
+                {
+                    videoPlayer.SetDirectAudioMute(i, true);
+                    videoPlayer.EnableAudioTrack(i, false);
+                }
+            }
         }
     }
 }

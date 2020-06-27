@@ -19,7 +19,7 @@ namespace TenorGifToolkit.Core
      * All search request require a callback method to be provided. For simple use, a lambda expression is recommended. For example...
      
      * Lambada way
-        StartCoroutine(tenoreServiceAPI.GetSearchResults(searchPrams, (TenorAPI.SearchResults searchResults) =>
+        StartCoroutine(tenoreServiceAPI.GetSearchResults(searchPrams, (SearchResults searchResults) =>
         {
             //Do work here.
         }));
@@ -29,7 +29,7 @@ namespace TenorGifToolkit.Core
         {
             StartCoroutine(tenoreServiceAPI.GetSearchResults(searchPrams, ReturnFunction));
         }
-        void ReturnFunction(TenorAPI.SearchResults searchResults)
+        void ReturnFunction(SearchResults searchResults)
         {
             //Do work Here
         }
@@ -38,16 +38,16 @@ namespace TenorGifToolkit.Core
     public class TenoreServiceAPI
     {
         public string ApiKey { get; protected set; }
-        private event Action<TenorAPI.SearchResults> SearchResultsEvent;
-        private event Action<TenorAPI.SearchResults.Result> SearchResultsResultEvent;
-        private event Action<TenorAPI.SearchResults.Result[]> SearchResultsResultsEvent;
+        private event Action<SearchResults> SearchResultsEvent;
+        private event Action<SearchResults.Result> SearchResultsResultEvent;
+        private event Action<SearchResults.Result[]> SearchResultsResultsEvent;
 
         public TenoreServiceAPI(string TenorApiKey)
         {
             ApiKey = TenorApiKey;
         }
 
-        public IEnumerator GetSearchResults(TenorAPI.SearchPramsAPI prams, Action<TenorAPI.SearchResults> callback)
+        public IEnumerator GetSearchResults(SearchPramsAPI prams, Action<SearchResults> callback)
         {
             string url = TenorAPI.ApiAddress + $"search?q={prams.SearchQuery}&key={ApiKey}&media_filter=basic&limit={prams.ResultsLimit}&pos={prams.NextPagePos}&contentfilter={prams.ContentFilter}";
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
@@ -60,7 +60,7 @@ namespace TenorGifToolkit.Core
                 }
                 else
                 {
-                    TenorAPI.SearchResults results = JsonUtility.FromJson<TenorAPI.SearchResults>(webRequest.downloadHandler.text);
+                    SearchResults results = JsonUtility.FromJson<SearchResults>(webRequest.downloadHandler.text);
                     SearchResultsEvent += callback;
                     SearchResultsEvent(results);
                     SearchResultsEvent = null;
@@ -68,7 +68,7 @@ namespace TenorGifToolkit.Core
             }
         }
 
-        public IEnumerator GetRandomSearchResults(TenorAPI.SearchPramsAPI prams, Action<TenorAPI.SearchResults> callback)
+        public IEnumerator GetRandomSearchResults(SearchPramsAPI prams, Action<SearchResults> callback)
         {
             string url = TenorAPI.ApiAddress + $"random?q={prams.SearchQuery}&key={ApiKey}&media_filter=basic&limit={prams.ResultsLimit}&pos={prams.NextPagePos}&contentfilter={prams.ContentFilter}";
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
@@ -81,7 +81,7 @@ namespace TenorGifToolkit.Core
                 }
                 else
                 {
-                    TenorAPI.SearchResults results = JsonUtility.FromJson<TenorAPI.SearchResults>(webRequest.downloadHandler.text);
+                    SearchResults results = JsonUtility.FromJson<SearchResults>(webRequest.downloadHandler.text);
                     SearchResultsEvent += callback;
                     SearchResultsEvent(results);
                     SearchResultsEvent = null;
@@ -89,7 +89,7 @@ namespace TenorGifToolkit.Core
             }
         }
 
-        public IEnumerator GetGifByID(int gifApiID, Action<TenorAPI.SearchResults.Result> callback)
+        public IEnumerator GetGifByID(int gifApiID, Action<SearchResults.Result> callback)
         {
             string url = TenorAPI.ApiAddress + $"gifs?key={ApiKey}&ids={gifApiID}&media_filter=basic&limit=1";
             using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
@@ -102,7 +102,7 @@ namespace TenorGifToolkit.Core
                 }
                 else
                 {
-                    TenorAPI.SearchResults results = JsonUtility.FromJson<TenorAPI.SearchResults>(webRequest.downloadHandler.text);
+                    SearchResults results = JsonUtility.FromJson<SearchResults>(webRequest.downloadHandler.text);
                     SearchResultsResultEvent += callback;
                     SearchResultsResultEvent(results.results[0] ?? null);
                     SearchResultsResultEvent = null;
@@ -110,7 +110,7 @@ namespace TenorGifToolkit.Core
             }
         }
 
-        public IEnumerator GetGifsByIDs(int[] gifApiIDs, Action<TenorAPI.SearchResults.Result[]> callback)
+        public IEnumerator GetGifsByIDs(int[] gifApiIDs, Action<SearchResults.Result[]> callback)
         {
             if (gifApiIDs.Length > 50)
             {
@@ -131,7 +131,7 @@ namespace TenorGifToolkit.Core
                 }
                 else
                 {
-                    TenorAPI.SearchResults results = JsonUtility.FromJson<TenorAPI.SearchResults>(webRequest.downloadHandler.text);
+                    SearchResults results = JsonUtility.FromJson<SearchResults>(webRequest.downloadHandler.text);
                     SearchResultsResultsEvent += callback;
                     SearchResultsResultsEvent(results.results);
                     SearchResultsResultsEvent = null;
@@ -161,29 +161,29 @@ namespace TenorGifToolkit.Core
         }
     }
 
-    public static partial class TenorAPI
+    public static class TenorAPI
     {
         private const string apiAddress = "https://api.tenor.com/v1/";
         public static string ApiAddress => apiAddress;
+    }
 
-        public class SearchPramsAPI
+    public class SearchPramsAPI
+    {
+        private int resultsLimit = 1;
+        public string SearchQuery { get; set; }
+        public int ResultsLimit { get => resultsLimit; set => resultsLimit = Mathf.Clamp(value, 1, 50); }
+        public ContentFilters ContentFilter { get; set; }
+        /// <summary>
+        /// https://tenor.com/gifapi/documentation#contentfilter
+        /// </summary>
+        public enum ContentFilters
         {
-            private int resultsLimit = 1;
-            public string SearchQuery { get; set; }
-            public int ResultsLimit { get => resultsLimit; set => resultsLimit = Mathf.Clamp(value, 1, 50); }
-            public ContentFilters ContentFilter { get; set; }
-            /// <summary>
-            /// https://tenor.com/gifapi/documentation#contentfilter
-            /// </summary>
-            public enum ContentFilters
-            {
-                high = 1,
-                medium = 2,
-                low = 3,
-                off = 4,
-            }
-            /// <summary> Page is not an index. If you want the next page, this should be set to the "next" values returned from your last search. Leave blank for a fresh search.</summary>
-            public string NextPagePos { get; set; }
+            high = 1,
+            medium = 2,
+            low = 3,
+            off = 4,
         }
+        /// <summary> Page is not an index. If you want the next page, this should be set to the "next" values returned from your last search. Leave blank for a fresh search.</summary>
+        public string NextPagePos { get; set; }
     }
 }

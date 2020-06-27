@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using TenorGifToolkit.Core;
-using TenorGifToolkit.Helpers;
+using TenorGifToolkit.Handler;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,9 +12,12 @@ public class TenorGifSearcherEditor : Editor
     private TenorGifSearcher Target { get; set; }
 
     private int searchEventMethodIndex;
+    private int searchByIdEventMethodIndex;
     private const BindingFlags searchEventMethodFlags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
     private SerializedProperty onSearchedTargetMethodSelector;
     private SerializedProperty onSearchedTargetComponent;
+    private SerializedProperty onSearchedByIdTargetMethodSelector;
+    private SerializedProperty onSearchedByIdTargetComponent;
     private SerializedProperty tenorApiKey;
 
     private void OnEnable()
@@ -22,10 +25,12 @@ public class TenorGifSearcherEditor : Editor
         Target = target as TenorGifSearcher;
         onSearchedTargetMethodSelector = serializedObject.FindProperty("onSearchedTargetMethodSelector");
         onSearchedTargetComponent = serializedObject.FindProperty("onSearchedTargetComponent");
+        onSearchedByIdTargetMethodSelector = serializedObject.FindProperty("onSearchedByIdTargetMethodSelector");
+        onSearchedByIdTargetComponent = serializedObject.FindProperty("onSearchedByIdTargetComponent");
         tenorApiKey = serializedObject.FindProperty("tenorApiKey");
     }
 
-    public class Testy
+    public class MethodComponentInfo
     {
         public Component target;
         public MethodInfo methodInfo;
@@ -115,48 +120,73 @@ public class TenorGifSearcherEditor : Editor
         EditorGUILayout.EndVertical();
         GUI.backgroundColor = defaultBackgroundColour;
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        GUILayout.Label("Only public methods with of (TenorAPI.SearchResults results, Boolean nextPages) can be selected.", EditorStyles.miniLabel);
-        EditorGUILayout.BeginVertical();
         Target.OnSearchedTargetObject = (GameObject)EditorGUILayout.ObjectField(Target.OnSearchedTargetObject, typeof(GameObject), true);
         if (Target.OnSearchedTargetObject)
         {
-            Dictionary<string, Testy> methodList = new Dictionary<string, Testy>();
-            methodList.Add("Not Selected", new Testy() {  });
+            Dictionary<string, MethodComponentInfo> methodBySearchList = new Dictionary<string, MethodComponentInfo>
+            {
+                { "Not Selected", new MethodComponentInfo() { } }
+            };
 
-            var componenents = Target.OnSearchedTargetObject.GetComponents<Component>().ToList();
+            Dictionary<string, MethodComponentInfo> methodByIdList = new Dictionary<string, MethodComponentInfo>
+            {
+                { "Not Selected", new MethodComponentInfo() { } }
+            };
+
+            List<Component> componenents = Target.OnSearchedTargetObject.GetComponents<Component>().ToList();
+            
             if (componenents.Count > 0)
             {
-                GenericMenu menu = new GenericMenu();
                 componenents.ForEach(component =>
                 {
                     component.GetType().GetMethods(searchEventMethodFlags).ToList().ForEach(method => {
                         ParameterInfo[] pramInfos = method.GetParameters();
+                        // By Search
                         if (pramInfos.Length == 2 && pramInfos[0].ParameterType == typeof(TenorFormattedResults) && pramInfos[1].ParameterType == typeof(bool))
                         {
                             string label = $"{component.GetType()}/{ method.Name}(" +
                                         $"{string.Join(", ", pramInfos.Select(x => $"{x.ParameterType.Name} {x.Name}"))}" +
                                         $")";
-                            methodList.Add(label, new Testy() {
+                            methodBySearchList.Add(label, new MethodComponentInfo() {
                                 target = component,
                                 methodInfo = method,
                             });;
+                        }
+                        // By ID
+                        if (pramInfos.Length == 1 && pramInfos[0].ParameterType == typeof(TenorFormattedResults))
+                        {
+                            string label = $"{component.GetType()}/{ method.Name}(" +
+                                        $"{string.Join(", ", pramInfos.Select(x => $"{x.ParameterType.Name} {x.Name}"))}" +
+                                        $")";
+                            methodByIdList.Add(label, new MethodComponentInfo()
+                            {
+                                target = component,
+                                methodInfo = method,
+                            }); ;
                         }
                     });
                 });
             }
 
 
-            searchEventMethodIndex = (methodList.TryGetValue(onSearchedTargetMethodSelector.stringValue, out Testy selectedMethodinfo)) ?
-                searchEventMethodIndex = methodList.Values.ToList().IndexOf(selectedMethodinfo) : 0;
+            GUILayout.Label("By Text", EditorStyles.miniBoldLabel);
+            GUILayout.Label("Public method of (TenorAPI.SearchResults results, Boolean nextPages).", EditorStyles.miniLabel);
+            searchEventMethodIndex = (methodBySearchList.TryGetValue(onSearchedTargetMethodSelector.stringValue, out MethodComponentInfo selectedSearchMethodinfo)) ?
+                searchEventMethodIndex = methodBySearchList.Values.ToList().IndexOf(selectedSearchMethodinfo) : 0;
+            searchEventMethodIndex = EditorGUILayout.Popup(searchEventMethodIndex, methodBySearchList.Select(x => x.Key).ToArray());
+            onSearchedTargetMethodSelector.stringValue = methodBySearchList.ElementAt(searchEventMethodIndex).Key;
+            Target.OnSearchedTargetMethod = (searchEventMethodIndex == 0) ? null : methodBySearchList[onSearchedTargetMethodSelector.stringValue].methodInfo;
+            onSearchedTargetComponent.objectReferenceValue = (searchEventMethodIndex == 0) ? null : methodBySearchList[onSearchedTargetMethodSelector.stringValue].target;
 
-            searchEventMethodIndex = EditorGUILayout.Popup(searchEventMethodIndex, methodList.Select(x => x.Key).ToArray());
-
-            onSearchedTargetMethodSelector.stringValue = methodList.ElementAt(searchEventMethodIndex).Key;
-
-            Target.OnSearchedTargetMethod = (searchEventMethodIndex == 0) ? null : methodList[onSearchedTargetMethodSelector.stringValue].methodInfo;
-            onSearchedTargetComponent.objectReferenceValue = (searchEventMethodIndex == 0) ? null : methodList[onSearchedTargetMethodSelector.stringValue].target;
+            GUILayout.Label("By ID", EditorStyles.miniBoldLabel);
+            GUILayout.Label("Public method of (TenorAPI.SearchResults results).", EditorStyles.miniLabel);
+            searchByIdEventMethodIndex = (methodByIdList.TryGetValue(onSearchedByIdTargetMethodSelector.stringValue, out MethodComponentInfo selectedByIdMethodinfo)) ?
+                searchByIdEventMethodIndex = methodByIdList.Values.ToList().IndexOf(selectedByIdMethodinfo) : 0;
+            searchByIdEventMethodIndex = EditorGUILayout.Popup(searchByIdEventMethodIndex, methodByIdList.Select(x => x.Key).ToArray());
+            onSearchedByIdTargetMethodSelector.stringValue = methodByIdList.ElementAt(searchByIdEventMethodIndex).Key;
+            Target.OnSearchedByIdTargetMethod = (searchByIdEventMethodIndex == 0) ? null : methodByIdList[onSearchedByIdTargetMethodSelector.stringValue].methodInfo;
+            onSearchedByIdTargetComponent.objectReferenceValue = (searchByIdEventMethodIndex == 0) ? null : methodByIdList[onSearchedByIdTargetMethodSelector.stringValue].target;
         }
-        EditorGUILayout.EndVertical();
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.Space();

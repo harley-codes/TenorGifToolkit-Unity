@@ -1,5 +1,5 @@
 ﻿using System;
-using TenorGifToolkit.Helpers;
+using TenorGifToolkit.Handler;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -15,6 +15,13 @@ using UnityEngine.Video;
  * That way you can see how everything is done, and hopefully get some ideas yourself.
  * Half the stuff in here can be simplified down/converted to a few prefabs and some helper classes. So don't be overwhelmed by the amount of code. Its super easy :) 
  * The main things to work with though is just the TenorGifSearcher class to make calls, and a function that will receive search requests.
+ * 
+ * Addressing the debug warning you may see, "AudioSampleProvider buffer overflow. X sample frames discarded."
+ * This is not an issue with Unity, or the code. This is a result of the GIF videos provided by Tenor.
+ * As we are loading MP4s they may come with sound, and they may not be created correctly by Tenor or The Up-loader.
+ * This is not an issue however, and it will not affect your game in any way :)
+ * I have research this any the easiest way to explain is..
+ * If a video has say 100 frames, but there are 150 frames worth of audio. The video player must discard 50 frames worth of audio.
  */
 
 public class TenorGifExampleScene : MonoBehaviour
@@ -26,6 +33,7 @@ public class TenorGifExampleScene : MonoBehaviour
     public GameObject panelChat, panelGif;
     public GameObject buttonLoadMore;
     public GameObject scrollViewContainerChat, scrollViewContainerGif;
+    private RectTransform scrollViewContainerChatViewport, scrollViewContainerGifViewport;
     public Transform spinningCube;
     public ScrollRect scrollRectChat;
     public Sprite gifMask;
@@ -35,12 +43,56 @@ public class TenorGifExampleScene : MonoBehaviour
         panelChat.SetActive(true);
         panelGif.SetActive(false);
         buttonLoadMore.SetActive(false);
+        scrollViewContainerChatViewport = scrollViewContainerChat.transform.parent.GetComponent<RectTransform>();
+        scrollViewContainerGifViewport = scrollViewContainerGif.transform.parent.GetComponent<RectTransform>();
+        InvokeRepeating("VramControllCaller", 0.1f, 0.1f);
     }
 
     private void Update()
     {
         //The spinning cube is purely an example of how the API calls will not lock up the screen when sending requests.
         spinningCube.Rotate(Vector3.up, 50 * Time.deltaTime);
+    }
+
+    // Invoked repeatedly from start()
+    // The actions will check the GIF's view condition of the scroll view,
+    // ensuring if the GIF is not in view, that it is not playing.
+    // Make sure you do a similar thing with your code.
+    // Invoking will help with the amount of checks done and increase performance.
+    // If you have to many video players running all at once,
+    // you will start to get memory errors and they wont play.
+    void VramControllCaller()
+    {
+        VramControllAction(scrollViewContainerGifViewport);
+        VramControllAction(scrollViewContainerChatViewport);
+    }
+
+    // See VramControllCaller() for comments.
+    void VramControllAction(RectTransform viewport)
+    {
+        Rect viewWorldRect = viewport.rect;
+        viewWorldRect.center = viewport.TransformPoint(viewWorldRect.center);
+        viewWorldRect.size = viewport.TransformVector(viewWorldRect.size);
+
+        foreach (VideoPlayer gif in viewport.GetComponentsInChildren<VideoPlayer>(true))
+        {
+            RectTransform gifRect = gif.GetComponent<RectTransform>();
+            Rect gifWorldRect = gifRect.rect;
+            gifWorldRect.center = gifRect.TransformPoint(gifWorldRect.center);
+            gifWorldRect.size = gifRect.TransformVector(gifWorldRect.size);
+
+            bool overlaps = gifWorldRect.Overlaps(viewWorldRect, true);
+
+            if (overlaps && !gif.isPlaying && gif.gameObject.activeInHierarchy)
+            {
+                gif.Play();
+            }
+
+            if (!overlaps && gif.isPlaying && gif.gameObject.activeInHierarchy)
+            {
+                gif.Stop();
+            }
+        }
     }
 
     // Called from the Input Field event in GIF panel.
@@ -78,13 +130,27 @@ public class TenorGifExampleScene : MonoBehaviour
                     Destroy(child.gameObject);
         }
 
-        DissplayGifSearchResults(searchResults);
+        DisplayGifSearchResults(searchResults);
     }
 
+    // SearchResultsCallback() for additional comments...
+    // SearchResultsByIdCallback() is the callback from when a searched GIF is clicked.
+    // In this example scene it is not necessary, but this is an example of how you would display a chosen GIF on another clients PC.
+    // For example, after choosing a GIF. You would broadcast relevant info including a GIF ID, the end client would then search the API based on GIF ID
+    // You wouldn't want to send the hole GIF data across server.
+    public void SearchResultsByIdCallback(TenorFormattedResults searchResults)
+    {
+        foreach (var result in searchResults.GifResults)
+        {
+            TenorFormattedResults.Gif gif = result.Value.SelectGifByQuality(gifSearchQuality);
+            SendChatGIF(gif);
+        }
+    }
+
+    // Called form SearchResultsCallback() after a GIFs are searched.
     // This will iterate through the provided results and append the Scroll-view with GIF buttons.
-    // Clicking a GIF button will make a call to SendChatGIF();
-    // 
-    private void DissplayGifSearchResults(TenorFormattedResults searchResults)
+    // Clicking a GIF button re-search the GIF by ID to be pasted in chat. See SearchResultsByIdCallback() comments for an explanation as to why.
+    private void DisplayGifSearchResults(TenorFormattedResults searchResults)
     {
         foreach (var result in searchResults.GifResults)
         {
@@ -105,7 +171,7 @@ public class TenorGifExampleScene : MonoBehaviour
             rectTransform.position = Vector2.zero;
             rectTransform.sizeDelta = Vector2.zero;
 
-            HelperFunctions.PrepareGifPlayer_NewRender(ref videoPlayer, out RenderTexture renderTexture, gif, loopGif: true);
+            HelperFunctions.PrepareGifPlayer_NewRender(ref videoPlayer, out RenderTexture renderTexture, gif, loopGif: true, disableAudio: true);
             rawImage.texture = renderTexture;
             try { videoPlayer.SetDirectAudioMute(0, true); } catch { }
             videoPlayer.Play();
@@ -116,7 +182,7 @@ public class TenorGifExampleScene : MonoBehaviour
             image.sprite = gifMask;
             button.onClick.AddListener(() =>
             {
-                SendChatGIF(gif);
+                tenorGifSearcher.GetGifByID(gif.ApiID);
                 button.onClick.RemoveAllListeners();
                 foreach (RectTransform child in scrollViewContainerGif.transform)
                     if (child.name != buttonLoadMore.name)
@@ -127,8 +193,8 @@ public class TenorGifExampleScene : MonoBehaviour
         buttonLoadMore.transform.SetAsLastSibling();
     }
 
-
-    // Called from DissplayGifSearchResults butoon.onClick lambada expression.
+    // Called from SearchResultsByIdCallback()
+    // Displays the GIF in chat.
     private void SendChatGIF(TenorFormattedResults.Gif gif)
     {
         ShowChatPanel();
@@ -137,7 +203,7 @@ public class TenorGifExampleScene : MonoBehaviour
         go.transform.SetParent(scrollViewContainerChat.transform);
         RawImage image = go.GetComponent<RawImage>();
         VideoPlayer videoPlayer = go.GetComponent<VideoPlayer>();
-        HelperFunctions.PrepareGifPlayer_NewRender(ref videoPlayer, out RenderTexture renderTexture, gif, loopGif: true);
+        HelperFunctions.PrepareGifPlayer_NewRender(ref videoPlayer, out RenderTexture renderTexture, gif, loopGif: true, disableAudio: true);
 
         AspectRatioFitter fitter = go.GetComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
@@ -152,7 +218,7 @@ public class TenorGifExampleScene : MonoBehaviour
 
     // Create a new Text game object in the Chat scroll view.
     // Called from the Input Field's event in Panel Chat
-    public void SendChatMessage(Text message) { SendChatMessage(message.text); }
+    public void SendChatMessage(Text message) => SendChatMessage(message.text);
 
     private void SendChatMessage(string message)
     {

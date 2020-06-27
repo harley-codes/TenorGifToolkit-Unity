@@ -16,48 +16,45 @@ namespace TenorGifToolkit.Core
      * https://www.postman.com/
      */
 
-    public static partial class TenorAPI
+    [Serializable]
+    public class SearchResults
     {
+        protected SearchResults() { }
+        public string weburl;
+        public Result[] results;
+        /// <summary> Next represents the necessary POS val for search queries when wanting the next page </summary>
+        public string next;
+
         [Serializable]
-        public class SearchResults
+        public class Result
         {
-            protected SearchResults() { }
-            public string weburl;
-            public Result[] results;
-            /// <summary> Next represents the necessary POS val for search queries when wanting the next page </summary>
-            public string next;
+            protected Result() { }
+            public int id;
+            public string title;
+            public List<Media> media;
+            public bool hasaudio;
+            /// <summary> Media returns the first index of media, as the Tenor API nests a value in a list. media's length is always 1 </summary>
+            public Media Media => media[0];
+        }
 
-            [Serializable]
-            public class Result
-            {
-                protected Result() { }
-                public int id;
-                public string title;
-                public List<Media> media;
-                public bool hasaudio;
-                /// <summary> Media returns the first index of media, as the Tenor API nests a value in a list. media's length is always 1 </summary>
-                public Media Media => media[0];
-            }
+        [Serializable]
+        public class Media
+        {
+            protected Media() { }
+            public MediaItem nanomp4;
+            public MediaItem tinymp4;
+            public MediaItem mp4;
+        }
 
-            [Serializable]
-            public class Media
-            {
-                protected Media() { }
-                public MediaItem nanomp4;
-                public MediaItem tinymp4;
-                public MediaItem mp4;
-            }
-
-            [Serializable]
-            public class MediaItem
-            {
-                protected MediaItem() { }
-                public string url;
-                public string preview;
-                public int[] dims;
-                /// <summary>Turns dims into a Vector, dimms has an array length of 2, storing the X and Y pixels. </summary>
-                public Vector2Int Dimentions => new Vector2Int(dims[0], dims[1]);
-            }
+        [Serializable]
+        public class MediaItem
+        {
+            protected MediaItem() { }
+            public string url;
+            public string preview;
+            public int[] dims;
+            /// <summary>Turns dims into a Vector, dimms has an array length of 2, storing the X and Y pixels. </summary>
+            public Vector2Int Dimentions => new Vector2Int(dims[0], dims[1]);
         }
     }
 }
