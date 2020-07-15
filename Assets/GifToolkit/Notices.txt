@@ -1,0 +1,17 @@
+This asset is governed by the Asset Store EULA; however, the following components and files are governed by the Tenor API Terms of Service:
+
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_blue_horizontal.png
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_blue_vertical.png
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_grey_horizontal.png
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_grey_vertical.png
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_white_horizontal.png
+⦁  \Assets\GifToolkit\PressKit\PB_tenor_logo_white_vertical.png
+⦁  \Assets\GifToolkit\PressKit\via_tenor_logo_blue.png
+⦁  \Assets\GifToolkit\PressKit\via_tenor_logo_grey.png
+⦁  \Assets\GifToolkit\PressKit\via_tenor_logo_white.png
+⦁  \Assets\GifToolkit\Core\TenorGifToolkitCore.cs
+⦁  \Assets\GifToolkit\Handler\TenorGifSearcher.cs
+⦁  \Assets\GifToolkit\Gizmos\TenorGifSearcher Icon.png
+
+For more information read The Tenor API Terms here:
+https://tenor.com/gifapi/documentation#apiterms

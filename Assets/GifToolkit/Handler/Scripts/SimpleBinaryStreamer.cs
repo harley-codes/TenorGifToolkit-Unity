@@ -17,7 +17,7 @@ using System.Runtime.Serialization.Formatters.Binary;
  * 
  */
 
-namespace TenorGifToolkit.Handler
+namespace GifToolkit.Handler
 {
     public class SimpleBinaryStreamer
     {

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using TenorGifToolkit.Core;
+using GifToolkit.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TenorGifToolkit.Handler
+namespace GifToolkit.Handler
 {
     /* It is highly recommended you don't modify this script unless you absolutely have to.
      * Keep in mind this is tied to the TenorGifSearcherEditor script and so any new variables will need to be scripted for the inspector.
@@ -41,8 +41,8 @@ namespace TenorGifToolkit.Handler
      * 
      * It is also useful if you wish to restrict the use of GIFs to a predefined list.
      */
-    [AddComponentMenu("Tenor Toolkit/GIF Searcher")]
-    public class TenorGifSearcher : MonoBehaviour
+    [AddComponentMenu("GIF Toolkit/GIF Searcher")]
+    public class GifSearcher : MonoBehaviour
     {
         //Private Fields
 #pragma warning disable CS0649 // Disable not used warnings, they are used...

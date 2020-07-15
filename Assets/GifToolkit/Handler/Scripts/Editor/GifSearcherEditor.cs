@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TenorGifToolkit.Core;
-using TenorGifToolkit.Handler;
+using GifToolkit.Core;
+using GifToolkit.Handler;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(TenorGifSearcher))]
-public class TenorGifSearcherEditor : Editor
+[CustomEditor(typeof(GifSearcher))]
+public class GifSearcherEditor : Editor
 {
-    private TenorGifSearcher Target { get; set; }
+    private GifSearcher Target { get; set; }
 
     private int searchEventMethodIndex;
     private int searchByIdEventMethodIndex;
@@ -22,7 +22,7 @@ public class TenorGifSearcherEditor : Editor
 
     private void OnEnable()
     {
-        Target = target as TenorGifSearcher;
+        Target = target as GifSearcher;
         onSearchedTargetMethodSelector = serializedObject.FindProperty("onSearchedTargetMethodSelector");
         onSearchedTargetComponent = serializedObject.FindProperty("onSearchedTargetComponent");
         onSearchedByIdTargetMethodSelector = serializedObject.FindProperty("onSearchedByIdTargetMethodSelector");

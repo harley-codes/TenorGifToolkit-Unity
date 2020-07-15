@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
 
-namespace TenorGifToolkit.Core
+namespace GifToolkit.Core
 {
     /* TenoreServiceAPI has been setup for easy use with the Tenor API
      * When you create a new instance of this class, an API key must be provided.

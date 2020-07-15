@@ -1,5 +1,5 @@
 ﻿using System;
-using TenorGifToolkit.Handler;
+using GifToolkit.Handler;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -24,9 +24,9 @@ using UnityEngine.Video;
  * If a video has say 100 frames, but there are 150 frames worth of audio. The video player must discard 50 frames worth of audio.
  */
 
-public class TenorGifExampleScene : MonoBehaviour
+public class GifToolkitExampleScene : MonoBehaviour
 {
-    public TenorGifSearcher tenorGifSearcher;
+    public GifSearcher tenorGifSearcher;
     private TenorFormattedResults SearchResults { get; set; }
     public GifQualities gifSearchQuality = GifQualities.Nano;
 

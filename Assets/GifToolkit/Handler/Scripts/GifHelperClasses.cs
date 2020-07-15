@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TenorGifToolkit.Core;
+using GifToolkit.Core;
 using UnityEngine;
 using UnityEngine.Video;
 using System.ComponentModel;
 
-namespace TenorGifToolkit.Handler
+namespace GifToolkit.Handler
 {
     /* Just some cool stuff to help out, and reduce your code :)
      * 

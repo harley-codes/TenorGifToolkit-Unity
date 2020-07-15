@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
-namespace TenorGifToolkit.Core
+namespace GifToolkit.Core
 {
     /* WARNING!!!
      * These classes, and variables have been setup/named specifically for the Tenor API.

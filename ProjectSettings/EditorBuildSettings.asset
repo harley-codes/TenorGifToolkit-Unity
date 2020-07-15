@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/TenorGifToolkit/Handler/Example/TenorGifExampleScene.unity
+    path: Assets/GifToolkit/Handler/Example/GifToolkitExampleScene.unity
     guid: 12a5a64f2c9e4744fad72463c3898278
   m_configObjects: {}
