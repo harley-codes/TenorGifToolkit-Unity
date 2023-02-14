@@ -7,7 +7,7 @@ This asset uses scripts and images that are governed under the Tenor API Terms o
 NOTE: This plugin is not a GIF decoder, it does not support .gif file formats\
 This is a plugin that communicates with TenorAPI and grabs the .MP4 version.
 
-Description
+Description\
 With GIF Toolkit you can make search requests to the Tenor API, then display them in-game using Unity's Video Player component.
 
 Features\
