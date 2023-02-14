@@ -4,7 +4,7 @@ https://assetstore.unity.com/packages/tools/integration/gif-toolkit-powered-by-t
 
 This asset uses scripts and images that are governed under the Tenor API Terms of Service; see Third-Party Notices.txt file in package for details.
 
-NOTE: This plugin is not a GIF decoder, it does not support .gif file formats.
+NOTE: This plugin is not a GIF decoder, it does not support .gif file formats\
 This is a plugin that communicates with TenorAPI and grabs the .MP4 version.
 
 Description
@@ -12,6 +12,7 @@ With GIF Toolkit you can make search requests to the Tenor API, then display the
 
 Features
 ● Search any GIF on Tenor
+
 ● Get GIF by specific ID - Pinical for an online chat system that supports GIFs
 ● Filter search results by Content Rating - G, PG, PG-13, and R(No Nudity)
 ● Select from different qualities Nano, Tiny and Normal
